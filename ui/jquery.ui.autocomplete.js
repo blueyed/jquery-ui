@@ -17,7 +17,8 @@
 $.widget( "ui.autocomplete", {
 	options: {
 		minLength: 1,
-		delay: 300
+		delay: 300,
+		separator: /\s*,\s*/
 	},
 	_create: function() {
 		var self = this,
@@ -121,14 +122,14 @@ $.widget( "ui.autocomplete", {
 					if ( false !== self._trigger( "focus", null, { item: item } ) ) {
 						// use value to match what will end up in the input, if it was a key event
 						if ( /^key/.test(event.originalEvent.type) ) {
-							self.element.val( item.value );
+							self.element.val( self.prefix + item.value );
 						}
 					}
 				},
 				selected: function( event, ui ) {
 					var item = ui.item.data( "item.autocomplete" );
 					if ( false !== self._trigger( "select", event, { item: item } ) ) {
-						self.element.val( item.value );
+						self.element.val( self.prefix + item.value );
 					}
 					self.close( event );
 					// only trigger when focus was lost (click on menu)
@@ -193,6 +194,13 @@ $.widget( "ui.autocomplete", {
 
 	search: function( value, event ) {
 		value = value != null ? value : this.element.val();
+		if ( this.options.separator ) {
+			var s = value.split(this.options.separator);
+			this.prefix = value.substring(0, value.length-s.slice(-1)[0].length);
+			value = s.pop()
+		} else {
+			this.prefix = "";
+		}
 		if ( value.length < this.options.minLength ) {
 			return this.close( event );
 		}
